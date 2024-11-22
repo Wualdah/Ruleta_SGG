@@ -1,6 +1,6 @@
-        import pygame
-        import random
-        import math
+import pygame
+import random
+import math
 
         # Configuración inicial
         def init_game():
