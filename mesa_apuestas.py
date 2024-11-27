@@ -199,30 +199,59 @@ def place_chip_on_betting_table(event, chips, betting_area):
             betting_area.append(chip)  # Agregar la ficha al área de apuestas
 
 def get_number_from_angle(angle):
-    angle_per_number = 360 / len(roulette_numbers)
-    initial_index = roulette_numbers.index(9)  # Suponemos que el número inicial en el centro es 29
+    # Orden correcto de los números en la ruleta, en sentido horario desde el triángulo
+    numbers = [9, 22, 18, 29, 7, 28, 12, 35, 3, 26, 0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31]
+
+    # Cada número ocupa una fracción del círculo completo (360° / 37 números)
+    sector_angle = 360 / len(numbers)
+
+    # Ajustar el ángulo para que el triángulo quede sincronizado con el número
+    adjusted_angle = (angle + (sector_angle / 2)) % 360
+
+    # Determinar el índice del número apuntado por el triángulo
+    index = int(adjusted_angle // sector_angle)
+
+    # Retornar el número correspondiente
+    return numbers[index]
+
+def draw_triangle(screen):
+    # Posición del triángulo
+    center_x, center_y = WIDTH // 5.2, HEIGHT // 2
+    triangle_width = 30
+    triangle_height = 20
     
-    # Calcular el índice del número en función del ángulo
-    index = (initial_index + int(angle / angle_per_number)) % len(roulette_numbers)
-    
-    return roulette_numbers[index]
+    # Coordenadas del triángulo (apuntando hacia abajo)
+    triangle_points = [
+        (center_x, center_y - 260),  # Vértice superior
+        (center_x - triangle_width // 2, center_y - 260 - triangle_height),  # Esquina izquierda
+        (center_x + triangle_width // 2, center_y - 260 - triangle_height),  # Esquina derecha
+    ]
+
+    # Dibujar el triángulo
+    pygame.draw.polygon(screen, RED, triangle_points)
+    pygame.draw.lines(screen, BLACK, True, triangle_points, 2)  # Borde negro
+
+
 def spin_roulette_animation(screen, clock, initial_angle):
     current_angle = initial_angle
     speed = random.uniform(15, 20)  # Velocidad inicial
     deceleration = 0.98  # Desaceleración
+
     while speed > 0.1:
         current_angle += speed
         current_angle %= 360
         speed *= deceleration
 
+        # Dibujar todo durante la animación
         screen.fill(WHITE)
-        draw_roulette(screen, current_angle)
+        draw_roulette(screen, current_angle)  # Dibujar ruleta girando
+        draw_triangle(screen)  # Dibujar triángulo después de la ruleta
         pygame.display.flip()
         clock.tick(60)
 
-    # Asegurarse de que siempre se devuelve el resultado y el ángulo
-    result = get_number_from_angle(current_angle)  # Obtener el número basado en el ángulo
-    return result, current_angle  # Devolver el resultado y el ángulo
+    # Obtener el número final basado en el ángulo
+    result = get_number_from_angle(current_angle)
+    return result, current_angle
 
 # Bucle principal
 def main():
@@ -234,14 +263,17 @@ def main():
     while running:
         screen.fill(WHITE)
 
-        # Dibujar la ruleta
+    # Dibujar la ruleta
         draw_roulette(screen, angle)
 
-        # Dibujar la mesa de apuestas y fichas
+    # Dibujar el triángulo indicador (siempre visible)
+        draw_triangle(screen)
+
+    # Dibujar la mesa de apuestas y fichas
         draw_betting_table(screen)
         draw_chips(screen)
 
-        # Dibujar el botón "Girar"
+    # Dibujar el botón "Girar"
         button_x, button_y = WIDTH // 2 - 60, HEIGHT - 100
         button_width, button_height = 120, 50
         pygame.draw.rect(screen, RED, (button_x, button_y, button_width, button_height))
@@ -254,15 +286,11 @@ def main():
                 if button_x <= event.pos[0] <= button_x + button_width and button_y <= event.pos[1] <= button_y + button_height:
                     result, angle = spin_roulette_animation(screen, clock, angle)
 
-        # Mostrar el resultado
+    # Mostrar el resultado
         draw_text(screen, f"Resultado: {result}" if result is not None else "Resultado: ---", WIDTH // 2, 50, BLACK, center=True)
 
         pygame.display.flip()
         clock.tick(60)
-
-    pygame.quit()
-
-    pygame.quit()
 
 if __name__ == "__main__":
     main()
