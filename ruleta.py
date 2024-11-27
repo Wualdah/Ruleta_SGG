@@ -115,7 +115,7 @@ def draw_roulette(screen, angle=0, result=None):
 # Función para obtener el número en función del ángulo
 def get_number_from_angle(angle):
     angle_per_number = 360 / len(roulette_numbers)
-    initial_index = roulette_numbers.index(27)  # Suponemos que el número inicial en el centro es 27
+    initial_index = roulette_numbers.index(9)  # Suponemos que el número inicial en el centro es 29
     
     # Calcular el índice del número en función del ángulo
     index = (initial_index + int(angle / angle_per_number)) % len(roulette_numbers)
